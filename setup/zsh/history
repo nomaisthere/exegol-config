@@ -1,0 +1,5 @@
+# Config file dedicated to the user's personal history shared between all exegol containers
+
+nmap -sU -p 53,67,68,69,123,161,162,500,514,520,1900,4500,33434 -oN udp "$IP"
+nmap -vv -p- "$IP"
+nmap -sC -sV -vv -oN tcp "$IP"
