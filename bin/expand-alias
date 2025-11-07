@@ -24,7 +24,7 @@ fi
 out=()
 for arg in "$@"; do
   [ $inline -eq 1 ] && arg=$(printf '%s' "$(envsubst <<<"$arg")")
-  [[ "$arg" =~ $safe ]] || arg=$(printf '"%s"' "$arg" | sed 's/[\\$"`!]/\\&/g')
+  [[ "$arg" =~ $safe ]] || arg=\"$(printf '%s' "$arg" | sed 's/[\\$"`!]/\\&/g')\"
 
   out+=$(printf '%s ' "$arg")
 done
