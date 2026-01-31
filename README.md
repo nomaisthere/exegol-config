@@ -13,8 +13,9 @@ This setup takes for granted you are in the `.exegol/my-resources/setup/` folder
 
 ### Tools
 
-- htb-cli
+- htb-utils
 - hashid
+- fidra
 
 ### Aliases
 
@@ -25,6 +26,6 @@ This setup takes for granted you are in the `.exegol/my-resources/setup/` folder
 
 Thanks to all Exegol maintainers and devs for this beautiful work.  
 
-- htb-cli : thx to [qu35t](https://github.com/qu35t-code) !  
 - Exegol-History variables replacement (expand-alias) : thx to [NedX](https://github.com/phil-chp)   !
 - Original github of [hashid](https://github.com/psypanda/hashID).
+- The fast ghidra setup is from [liba2k](https://gist.github.com/liba2k/d522b4f20632c4581af728b286028f8f)

@@ -11,3 +11,6 @@ bindkey '^\' expand_alias
 fakeclock() {
   faketime "$(rdate -n ${1:-$DC_IP} -p | awk '{print $2, $3, $4}' | date -f - "+%Y-%m-%d %H:%M:%S")" zsh
 }
+
+alias unhex="pwn unhex"
+alias f="htb submit"

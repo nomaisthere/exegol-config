@@ -1,0 +1,91 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+import click
+import subprocess
+import tempfile
+import itertools as IT
+import select
+
+# === CONFIG ===
+PROJECT_DIRECTORY = '/tmp'
+GHIDRA_PATH = '/opt/tools/ghidra'
+JAVA_HOME = '/usr/lib/jvm/java-11-openjdk'
+
+# === HELPERS ===
+def uniquify(path, sep=''):
+    """
+    Generate a unique temporary filename based on path.
+    """
+    def name_sequence():
+        count = IT.count()
+        yield ''
+        while True:
+            yield f'{sep}_{next(count):d}'
+
+    orig = tempfile._name_sequence
+    with tempfile._once_lock:
+        tempfile._name_sequence = name_sequence()
+        path = os.path.normpath(path)
+        dirname, basename = os.path.split(path)
+        filename, ext = os.path.splitext(basename)
+        fd, filename = tempfile.mkstemp(dir=dirname, prefix=filename, suffix=ext)
+        os.close(fd)
+        os.remove(filename)
+        tempfile._name_sequence = orig
+    return filename
+
+def should_run():
+    """
+    Wait 3 seconds before starting; return False if key pressed.
+    """
+    click.secho('Will run analysis in 3 seconds, press any key to cancel...', fg='green')
+    i, _, _ = select.select([sys.stdin], [], [], 3)
+    return not i
+
+def run_command(cmd_list):
+    """
+    Run a command with JAVA_HOME enforced.
+    """
+    env = dict(os.environ)
+    env["JAVA_HOME"] = JAVA_HOME
+    subprocess.run(cmd_list, env=env, check=True)
+
+# === CLI ===
+@click.command()
+@click.argument('filename', type=click.Path(exists=True))
+@click.option('-t', '--temp', is_flag=True, help='Use temporary project directory')
+def main(filename, temp):
+    abs_filename = os.path.abspath(filename)
+
+    if os.path.isdir(abs_filename):
+        run_command([f'{GHIDRA_PATH}/ghidraRun'])
+        return
+
+    if abs_filename.endswith('.gpr'):
+        run_command([f'{GHIDRA_PATH}/ghidraRun', abs_filename])
+        return
+
+    if temp:
+        proj_file = uniquify(os.path.join(PROJECT_DIRECTORY, os.path.basename(abs_filename) + '.gpr'))
+        out_dir = PROJECT_DIRECTORY
+    else:
+        proj_file = uniquify(abs_filename + '.gpr')
+        out_dir = os.path.dirname(abs_filename) or '.'
+
+    proj_name = os.path.splitext(os.path.basename(proj_file))[0]
+
+    file_info = subprocess.check_output(['file', abs_filename]).decode('utf8').strip()
+    click.secho(file_info, fg='yellow')
+    if not should_run():
+        click.secho('Cancelled by user.', fg='red')
+        return
+
+    click.secho(f'Starting headless analysis: {proj_name}', fg='cyan')
+    run_command([f'{GHIDRA_PATH}/support/analyzeHeadless', out_dir, proj_name, '-import', abs_filename])
+    click.secho(f'Opening Ghidra GUI: {proj_file}', fg='cyan')
+    run_command([f'{GHIDRA_PATH}/ghidraRun', proj_file])
+
+if __name__ == '__main__':
+    main()
